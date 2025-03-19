@@ -51,7 +51,7 @@ class CanvasPainter extends CustomPainter {
           double radius = _serverToPainterRadius(player["radius"], painterSize);
           canvas.drawCircle(pos, radius, paint);
 
-          String imgPathArrows = "images/arrows.png";
+          String imgPathArrows = "images/Hull_01_Completo.png";
           if (appData.imagesCache.containsKey(imgPathArrows)) {
             final ui.Image tilesetImage = appData.imagesCache[imgPathArrows]!;
             Offset tilePos = _getArrowTile(player["direction"]);
@@ -85,12 +85,11 @@ class CanvasPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       );
       final textStyle = ui.TextStyle(color: playerColor, fontSize: 14);
-      final paragraphBuilder =
-          ui.ParagraphBuilder(paragraphStyle)
-            ..pushStyle(textStyle)
-            ..addText(
-              "Press Up, Down, Left or Right keys to move (id: $playerId)",
-            );
+      final paragraphBuilder = ui.ParagraphBuilder(paragraphStyle)
+        ..pushStyle(textStyle)
+        ..addText(
+          "Press Up, Down, Left or Right keys to move (id: $playerId)",
+        );
       final paragraph = paragraphBuilder.build();
       paragraph.layout(ui.ParagraphConstraints(width: painterSize.width));
       canvas.drawParagraph(

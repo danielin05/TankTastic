@@ -23,7 +23,7 @@ class _LayoutState extends State<Layout> {
     // Preload image assets into cache
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final appData = Provider.of<AppData>(context, listen: false);
-      await appData.getImage("images/arrows.png");
+      await appData.getImage("images/Hull_01_Completo.png");
     });
   }
 
@@ -31,14 +31,18 @@ class _LayoutState extends State<Layout> {
   void _onKeyEvent(KeyEvent event, AppData appData) {
     String key = event.logicalKey.keyLabel.toLowerCase();
 
-    if (key.contains(" ")) {
+    if (key == " ") {
+      print("espacio-" + key + "-espacio");
+    } else if (key.contains(" ")) {
       key = key.split(" ")[1];
+      print(key);
     } else {
       return;
     }
 
     if (event is KeyDownEvent) {
       _pressedKeys.add(key);
+      (key);
     } else if (event is KeyUpEvent) {
       _pressedKeys.remove(key);
     }
@@ -53,7 +57,9 @@ class _LayoutState extends State<Layout> {
     bool down = _pressedKeys.contains("down");
     bool left = _pressedKeys.contains("left");
     bool right = _pressedKeys.contains("right");
+    bool space = _pressedKeys.contains(" ");
 
+    if (space) return "shoot";
     if (up && left) return "upLeft";
     if (up && right) return "upRight";
     if (down && left) return "downLeft";
