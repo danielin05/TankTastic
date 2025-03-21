@@ -70,6 +70,15 @@ class GameLogic {
                 this.players.get(id).direction = obj.value;
               }
               break;
+              case "shoot":
+                if (this.players.has(id)) {
+                    let player = this.players.get(id);
+                    player.shoot = obj.value; // Asignamos el valor de obj.value (true/false) a shoot
+                    if (player.shoot) {
+                        console.log(`EL TANQUE: ${player.id} ha efectuado un disparo!`);
+                    }
+                }
+                break;
             default:
               break;
           }
@@ -103,6 +112,9 @@ class GameLogic {
                 }
                 return true;
             });
+            if (client.shoot){
+                console.log("DISPARA!!!!!!!")
+            }
         });
     }
 

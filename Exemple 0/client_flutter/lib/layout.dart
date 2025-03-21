@@ -32,7 +32,7 @@ class _LayoutState extends State<Layout> {
     String key = event.logicalKey.keyLabel.toLowerCase();
 
     if (key == " ") {
-      print("espacio-" + key + "-espacio");
+      key == key;
     } else if (key.contains(" ")) {
       key = key.split(" ")[1];
       print(key);
@@ -49,7 +49,9 @@ class _LayoutState extends State<Layout> {
 
     // Enviar la direcció escollida pel jugador al servidor
     var direction = _getDirectionFromKeys();
+    var shoot = _getShootBoolean();
     appData.sendMessage(jsonEncode({"type": "direction", "value": direction}));
+    appData.sendMessage(jsonEncode({"type": "shoot", "value": shoot}));
   }
 
   String _getDirectionFromKeys() {
@@ -57,9 +59,7 @@ class _LayoutState extends State<Layout> {
     bool down = _pressedKeys.contains("down");
     bool left = _pressedKeys.contains("left");
     bool right = _pressedKeys.contains("right");
-    bool space = _pressedKeys.contains(" ");
 
-    if (space) return "shoot";
     if (up && left) return "upLeft";
     if (up && right) return "upRight";
     if (down && left) return "downLeft";
@@ -70,6 +70,12 @@ class _LayoutState extends State<Layout> {
     if (right) return "right";
 
     return "none";
+  }
+
+  bool _getShootBoolean() {
+    bool shoot = _pressedKeys.contains(" ");
+
+    return shoot;
   }
 
   @override
