@@ -5,6 +5,17 @@ import 'app_data.dart';
 class CanvasPainter extends CustomPainter {
   final AppData appData;
 
+  Map directions = {
+    "left": Offset(0, 0),
+    // "upLeft": Offset(64, 0),
+    "up": Offset(128, 0),
+    // "upRight": Offset(192, 0),
+    "right": Offset(256, 0),
+    // "downRight": Offset(320, 0),
+    "down": Offset(384, 0),
+    // "downLeft": Offset(448, 0),
+  };
+
   CanvasPainter(this.appData);
 
   @override
@@ -42,7 +53,7 @@ class CanvasPainter extends CustomPainter {
       // Dibuixar els jugadors (cercles de colors)
       if (gameState["players"] != null) {
         for (var player in gameState["players"]) {
-          paint.color = _getColorFromString(player["color"]);
+          paint.color = Colors.transparent;
           Offset pos = _serverToPainterCoords(
             Offset(player["x"], player["y"]),
             painterSize,
@@ -51,10 +62,11 @@ class CanvasPainter extends CustomPainter {
           double radius = _serverToPainterRadius(player["radius"], painterSize);
           canvas.drawCircle(pos, radius, paint);
 
-          String imgPathArrows = "images/Hull_01_Completo.png";
+          String imgPathArrows = "images/tanks1.png";
           if (appData.imagesCache.containsKey(imgPathArrows)) {
             final ui.Image tilesetImage = appData.imagesCache[imgPathArrows]!;
-            Offset tilePos = _getArrowTile(player["direction"]);
+            Offset tilePos =
+                _getArrowTile(player["direction"], player["lastDirection"]);
             Size tileSize = Size(64, 64);
             double painterScale = (2 * radius) / tileSize.width;
             Size painterSize = Size(
@@ -80,7 +92,7 @@ class CanvasPainter extends CustomPainter {
 
       // Escriure el text informatiu i l'identificador d'usuari
       String playerId = appData.playerData["id"];
-      Color playerColor = _getColorFromString(appData.playerData["color"]);
+      Color playerColor = Colors.black;
       final paragraphStyle = ui.ParagraphStyle(
         textDirection: TextDirection.ltr,
       );
@@ -128,48 +140,26 @@ class CanvasPainter extends CustomPainter {
   }
 
   // Agafar la part del dibuix que té la fletxa de direcció a dibuixar
-  Offset _getArrowTile(String direction) {
+  Offset _getArrowTile(String direction, String lastDirection) {
     switch (direction) {
       case "left":
-        return Offset(64, 0);
-      case "upLeft":
-        return Offset(128, 0);
+        return directions[direction];
+      // case "upLeft":
+      //   return directions[direction];
       case "up":
-        return Offset(192, 0);
-      case "upRight":
-        return Offset(256, 0);
+        return directions[direction];
+      // case "upRight":
+      //   return directions[direction];
       case "right":
-        return Offset(320, 0);
-      case "downRight":
-        return Offset(384, 0);
+        return directions[direction];
+      // case "downRight":
+      //   return directions[direction];
       case "down":
-        return Offset(448, 0);
-      case "downLeft":
-        return Offset(512, 0);
+        return directions[direction];
+      // case "downLeft":
+      //   return directions[direction];
       default:
-        return Offset(0, 0);
-    }
-  }
-
-  // Escollir un color en funció del seu nom
-  static Color _getColorFromString(String color) {
-    switch (color.toLowerCase()) {
-      case "gray":
-        return Colors.grey;
-      case "green":
-        return Colors.green;
-      case "blue":
-        return Colors.blue;
-      case "orange":
-        return Colors.orange;
-      case "red":
-        return Colors.red;
-      case "purple":
-        return Colors.purple;
-      case "black":
-        return Colors.black;
-      default:
-        return Colors.black;
+        return directions[lastDirection];
     }
   }
 }

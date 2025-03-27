@@ -23,7 +23,7 @@ class _LayoutState extends State<Layout> {
     // Preload image assets into cache
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final appData = Provider.of<AppData>(context, listen: false);
-      await appData.getImage("images/Hull_01_Completo.png");
+      await appData.getImage("images/tanks1.png");
     });
   }
 
@@ -60,10 +60,10 @@ class _LayoutState extends State<Layout> {
     bool left = _pressedKeys.contains("left");
     bool right = _pressedKeys.contains("right");
 
-    if (up && left) return "upLeft";
-    if (up && right) return "upRight";
-    if (down && left) return "downLeft";
-    if (down && right) return "downRight";
+    // if (up && left) return "upLeft";
+    // if (up && right) return "upRight";
+    // if (down && left) return "downLeft";
+    // if (down && right) return "downRight";
     if (up) return "up";
     if (down) return "down";
     if (left) return "left";
