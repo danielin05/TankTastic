@@ -19,9 +19,42 @@ class AppData extends ChangeNotifier {
   Map<String, ui.Image> imagesCache = {};
   Map<String, dynamic> gameState = {};
   dynamic playerData;
-
+  List<MapLayer> mapLayers = [];
+  Size mapSize = const Size(512, 512);
   AppData() {
     _connectToWebSocket();
+  }
+  Future<void> loadMapFromJson() async {
+    final String jsonString =
+        await rootBundle.loadString("assets/game_data.json");
+    final Map<String, dynamic> data = jsonDecode(jsonString);
+
+    final level = data["levels"][0]; // Solo usamos el primer nivel
+    final layers = level["layers"] as List<dynamic>;
+
+    mapLayers = [];
+
+    for (var layer in layers) {
+      if (layer["visible"] != true) continue;
+
+      final String imageFile = layer["tilesSheetFile"];
+      final image = await getImage("tiles/${imageFile}");
+
+      final tileMap = (layer["tileMap"] as List)
+          .map<List<int>>((row) => List<int>.from(row))
+          .toList();
+
+      mapLayers.add(
+        MapLayer(
+          image: image,
+          tileMap: tileMap,
+          tileWidth: layer["tilesWidth"],
+          tileHeight: layer["tilesHeight"],
+        ),
+      );
+    }
+
+    notifyListeners();
   }
 
   // Connectar amb el servidor (amb reintents si falla)
@@ -119,7 +152,6 @@ class AppData extends ChangeNotifier {
     );
   }
 
-  // Desconnectar-se del servidor
   void disconnect() {
     _wsHandler.disconnectFromServer();
     isConnected = false;
@@ -148,4 +180,18 @@ class AppData extends ChangeNotifier {
     ui.decodeImageFromList(bytes, (ui.Image img) => completer.complete(img));
     return completer.future;
   }
+}
+
+class MapLayer {
+  final ui.Image image;
+  final List<List<int>> tileMap;
+  final int tileWidth;
+  final int tileHeight;
+
+  MapLayer({
+    required this.image,
+    required this.tileMap,
+    required this.tileWidth,
+    required this.tileHeight,
+  });
 }

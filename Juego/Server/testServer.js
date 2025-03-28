@@ -13,5 +13,5 @@ ws.on('open', () => {
 
 ws.on('message', (msg) => {
   const data = JSON.parse(msg);
-  console.log('Mensaje del servidor:', data);
+  console.dir(data, { depth: null });
 });
