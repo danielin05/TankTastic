@@ -45,30 +45,6 @@ class GameLogic {
 
         // Filtrar zonas de colisión (color azul)
         this.zones = zones.filter(zone => zone.color === 'blue');
-        
-        // Rectángulos en movimiento (ejemplo del juego original)
-        for (let i = 0; i < 10; i++) {
-            this.objects.push({
-                x: Math.random() * (1 - OBJECT_WIDTH),
-                y: Math.random() * (1 - OBJECT_HEIGHT),
-                width: OBJECT_WIDTH,
-                height: OBJECT_HEIGHT,
-                speed: SPEED,
-                direction: Math.random() > 0.5 ? 1 : -1
-            });
-        }
-
-        // Crear algunos objetos rectangulares que se mueven automáticamente
-        for (let i = 0; i < 10; i++) {
-            this.objects.push({
-                x: Math.random() * (1 - OBJECT_WIDTH),
-                y: Math.random() * (1 - OBJECT_HEIGHT),
-                width: OBJECT_WIDTH,
-                height: OBJECT_HEIGHT,
-                speed: SPEED,
-                direction: Math.random() > 0.5 ? 1 : -1
-            });
-        }
     }
 
     // Añadir un nuevo jugador
