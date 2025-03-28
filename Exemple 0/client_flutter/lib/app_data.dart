@@ -1,3 +1,4 @@
+// app_data.dart
 import 'dart:convert';
 import 'dart:async';
 import 'dart:ui' as ui;
@@ -6,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'utils_websockets.dart';
 
 class AppData extends ChangeNotifier {
-  // Atributs per gestionar la connexió
   final WebSocketsHandler _wsHandler = WebSocketsHandler();
   final String _wsServer = "localhost";
   final int _wsPort = 8888;
@@ -15,30 +15,42 @@ class AppData extends ChangeNotifier {
   final int _maxReconnectAttempts = 5;
   final Duration _reconnectDelay = Duration(seconds: 3);
 
-  // Atributs per gestionar el joc
   Map<String, ui.Image> imagesCache = {};
   Map<String, dynamic> gameState = {};
   dynamic playerData;
   List<MapLayer> mapLayers = [];
+  List<Zone> collisionZones = [];
   Size mapSize = const Size(512, 512);
+
   AppData() {
     _connectToWebSocket();
   }
+
   Future<void> loadMapFromJson() async {
     final String jsonString =
         await rootBundle.loadString("assets/game_data.json");
     final Map<String, dynamic> data = jsonDecode(jsonString);
-
-    final level = data["levels"][0]; // Solo usamos el primer nivel
+    final level = data["levels"][0];
     final layers = level["layers"] as List<dynamic>;
 
     mapLayers = [];
+
+    final zones = level["zones"] as List<dynamic>;
+    collisionZones = zones
+        .where((z) => z["color"] == "blue")
+        .map((z) => Zone(
+              x: z["x"].toDouble(),
+              y: z["y"].toDouble(),
+              width: z["width"].toDouble(),
+              height: z["height"].toDouble(),
+            ))
+        .toList();
 
     for (var layer in layers) {
       if (layer["visible"] != true) continue;
 
       final String imageFile = layer["tilesSheetFile"];
-      final image = await getImage("tiles/${imageFile}");
+      final image = await getImage("tiles/\${imageFile}");
 
       final tileMap = (layer["tileMap"] as List)
           .map<List<int>>((row) => List<int>.from(row))
@@ -57,18 +69,34 @@ class AppData extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Connectar amb el servidor (amb reintents si falla)
-  void _connectToWebSocket() {
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      if (kDebugMode) {
-        print("S'ha assolit el màxim d'intents de reconnexió.");
-      }
-      return;
+  bool willCollide(double x, double y, String direction) {
+    const step = 0.01;
+    double newX = x, newY = y;
+    switch (direction) {
+      case "up":
+        newY -= step;
+        break;
+      case "down":
+        newY += step;
+        break;
+      case "left":
+        newX -= step;
+        break;
+      case "right":
+        newX += step;
+        break;
+      default:
+        return false;
     }
+    final px = newX * mapSize.width;
+    final py = newY * mapSize.height;
+    return collisionZones.any((zone) => zone.contains(px, py));
+  }
 
+  void _connectToWebSocket() {
+    if (_reconnectAttempts >= _maxReconnectAttempts) return;
     isConnected = false;
     notifyListeners();
-
     _wsHandler.connectToServer(
       _wsServer,
       _wsPort,
@@ -76,75 +104,46 @@ class AppData extends ChangeNotifier {
       onError: _onWebSocketError,
       onDone: _onWebSocketClosed,
     );
-
     isConnected = true;
     _reconnectAttempts = 0;
     notifyListeners();
   }
 
-  // Tractar un missatge rebut des del servidor
   void _onWebSocketMessage(String message) {
     try {
       var data = jsonDecode(message);
       if (data["type"] == "update") {
-        // Guardar les dades de l'estat de la partida
         gameState = {}..addAll(data["gameState"]);
         String? playerId = _wsHandler.socketId;
         if (playerId != null && gameState["players"] is List) {
-          // Guardar les dades del propi jugador
           playerData = _getPlayerData(playerId);
         }
         notifyListeners();
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print("Error processant missatge WebSocket: $e");
-      }
-    }
+    } catch (_) {}
   }
 
-  // Tractar els errors de connexió
   void _onWebSocketError(dynamic error) {
-    if (kDebugMode) {
-      print("Error de WebSocket: $error");
-    }
     isConnected = false;
     notifyListeners();
     _scheduleReconnect();
   }
 
-  // Tractar les desconnexions
   void _onWebSocketClosed() {
-    if (kDebugMode) {
-      print("WebSocket tancat. Intentant reconnectar...");
-    }
     isConnected = false;
     notifyListeners();
     _scheduleReconnect();
   }
 
-  // Programar una reconnexió (en cas que hagi fallat)
   void _scheduleReconnect() {
     if (_reconnectAttempts < _maxReconnectAttempts) {
       _reconnectAttempts++;
-      if (kDebugMode) {
-        print(
-          "Intent de reconnexió #$_reconnectAttempts en ${_reconnectDelay.inSeconds} segons...",
-        );
-      }
       Future.delayed(_reconnectDelay, () {
         _connectToWebSocket();
       });
-    } else {
-      if (kDebugMode) {
-        print(
-          "No es pot reconnectar al servidor després de $_maxReconnectAttempts intents.",
-        );
-      }
     }
   }
 
-  // Filtrar les dades del propi jugador (fent servir l'id de player)
   dynamic _getPlayerData(String playerId) {
     return (gameState["players"] as List).firstWhere(
       (player) => player["id"] == playerId,
@@ -158,17 +157,13 @@ class AppData extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Enviar un missatge al servidor
   void sendMessage(String message) {
-    if (isConnected) {
-      _wsHandler.sendMessage(message);
-    }
+    if (isConnected) _wsHandler.sendMessage(message);
   }
 
-  // Obté una imatge de 'assets' (si no la té ja en caché)
   Future<ui.Image> getImage(String assetName) async {
     if (!imagesCache.containsKey(assetName)) {
-      final ByteData data = await rootBundle.load('assets/$assetName');
+      final ByteData data = await rootBundle.load('assets/\$assetName');
       final Uint8List bytes = data.buffer.asUint8List();
       imagesCache[assetName] = await decodeImage(bytes);
     }
@@ -194,4 +189,18 @@ class MapLayer {
     required this.tileWidth,
     required this.tileHeight,
   });
+}
+
+class Zone {
+  final double x, y, width, height;
+
+  Zone(
+      {required this.x,
+      required this.y,
+      required this.width,
+      required this.height});
+
+  bool contains(double px, double py) {
+    return px >= x && px <= x + width && py >= y && py <= y + height;
+  }
 }
