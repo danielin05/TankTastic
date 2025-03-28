@@ -64,26 +64,7 @@ class CanvasPainter extends CustomPainter {
 
     var gameState = appData.gameState;
     if (gameState.isNotEmpty) {
-      // --- 2. Objetos negros (opcional) ---
-      if (gameState["objects"] != null) {
-        for (var obj in gameState["objects"]) {
-          paint.color = Colors.black;
-          Offset pos = _serverToPainterCoords(
-            Offset(obj["x"], obj["y"]),
-            painterSize,
-          );
-          Size dims = _serverToPainterSize(
-            Size(obj["width"], obj["height"]),
-            painterSize,
-          );
-          canvas.drawRect(
-            Rect.fromLTWH(pos.dx, pos.dy, dims.width, dims.height),
-            paint,
-          );
-        }
-      }
-
-      // --- 3. Proyectiles ---
+      // --- 2. Proyectiles ---
       if (gameState["projectiles"] != null) {
         for (var projectile in gameState["projectiles"]) {
           Offset pos = _serverToPainterCoords(
@@ -109,7 +90,7 @@ class CanvasPainter extends CustomPainter {
         }
       }
 
-      // --- 4. Jugadores ---
+      // --- 3. Jugadores ---
       if (gameState["players"] != null) {
         for (var player in gameState["players"]) {
           Offset pos = _serverToPainterCoords(
@@ -118,42 +99,43 @@ class CanvasPainter extends CustomPainter {
           );
           double radius = _serverToPainterRadius(player["radius"], painterSize);
 
-          String imgPathArrows = "images/tanks1.png";
-          if (appData.imagesCache.containsKey(imgPathArrows)) {
-            final ui.Image tilesetImage = appData.imagesCache[imgPathArrows]!;
+          String imgPath = _getImageFromStringColor(player["color"]);
+          if (appData.imagesCache.containsKey(imgPath)) {
+            final ui.Image tilesetImage = appData.imagesCache[imgPath]!;
             Offset tilePos =
                 _getArrowTile(player["direction"], player["lastDirection"]);
             Size tileSize = Size(64, 64);
             double painterScale = (2 * radius) / tileSize.width;
-            Size painterSize = Size(
+            Size scaledSize = Size(
               tileSize.width * painterScale,
               tileSize.height * painterScale,
             );
-            double x = pos.dx - (painterSize.width / 2);
-            double y = pos.dy - (painterSize.height / 2);
+            double x = pos.dx - (scaledSize.width / 2);
+            double y = pos.dy - (scaledSize.height / 2);
             canvas.drawImageRect(
               tilesetImage,
               Rect.fromLTWH(
                   tilePos.dx, tilePos.dy, tileSize.width, tileSize.height),
-              Rect.fromLTWH(x, y, painterSize.width, painterSize.height),
+              Rect.fromLTWH(x, y, scaledSize.width, scaledSize.height),
               Paint(),
             );
           }
         }
       }
 
-      // --- 5. Texto de ayuda + ID del jugador ---
+      // --- 4. Texto de ayuda + ID del jugador ---
       String playerId = appData.playerData["id"];
+      Color playerColor = _getColorFromString(appData.playerData["color"]);
       final paragraphBuilder = ui.ParagraphBuilder(
           ui.ParagraphStyle(textDirection: TextDirection.ltr))
-        ..pushStyle(ui.TextStyle(color: Colors.black, fontSize: 14))
+        ..pushStyle(ui.TextStyle(color: playerColor, fontSize: 14))
         ..addText("Press Up, Down, Left or Right keys to move (id: $playerId)");
       final paragraph = paragraphBuilder.build()
         ..layout(ui.ParagraphConstraints(width: painterSize.width));
       canvas.drawParagraph(
           paragraph, Offset(10, painterSize.height - paragraph.height - 5));
 
-      // --- 6. Indicador de conexión ---
+      // --- 5. Indicador de conexión ---
       paint.color = appData.isConnected ? Colors.green : Colors.red;
       canvas.drawCircle(Offset(painterSize.width - 10, 10), 5, paint);
     }
@@ -181,6 +163,42 @@ class CanvasPainter extends CustomPainter {
   }
 
   Offset _getArrowTile(String direction, String lastDirection) {
+    Map<String, Offset> directions = {
+      "left": Offset(0, 0),
+      "up": Offset(128, 0),
+      "right": Offset(256, 0),
+      "down": Offset(384, 0),
+    };
     return directions[direction] ?? directions[lastDirection] ?? Offset.zero;
+  }
+
+  static String _getImageFromStringColor(String color) {
+    switch (color.toLowerCase()) {
+      case "green":
+        return "images/tanks4.png";
+      case "blue":
+        return "images/tanks2.png";
+      case "brown":
+        return "images/tanks1.png";
+      case "yellow":
+        return "images/tanks3.png";
+      default:
+        return "images/tanks1.png";
+    }
+  }
+
+  static Color _getColorFromString(String color) {
+    switch (color.toLowerCase()) {
+      case "brown":
+        return Colors.brown;
+      case "green":
+        return Colors.green;
+      case "blue":
+        return Colors.blue;
+      case "yellow":
+        return Colors.yellow;
+      default:
+        return Colors.brown;
+    }
   }
 }
