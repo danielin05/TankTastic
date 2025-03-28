@@ -30,26 +30,6 @@ class CanvasPainter extends CustomPainter {
     // Dibuixar l'estat del joc
     var gameState = appData.gameState;
     if (gameState.isNotEmpty) {
-      // Dibuixar els objectes (quadres negres)
-      if (gameState["objects"] != null) {
-        for (var obj in gameState["objects"]) {
-          paint.color = Colors.black;
-          Offset pos = _serverToPainterCoords(
-            Offset(obj["x"], obj["y"]),
-            painterSize,
-          );
-          Size dims = _serverToPainterSize(
-            Size(obj["width"], obj["height"]),
-            painterSize,
-          );
-
-          canvas.drawRect(
-            Rect.fromLTWH(pos.dx, pos.dy, dims.width, dims.height),
-            paint,
-          );
-        }
-      }
-
       // Dibuixar els jugadors (cercles de colors)
       if (gameState["players"] != null) {
         for (var player in gameState["players"]) {
@@ -62,7 +42,7 @@ class CanvasPainter extends CustomPainter {
           double radius = _serverToPainterRadius(player["radius"], painterSize);
           canvas.drawCircle(pos, radius, paint);
 
-          String imgPathArrows = "images/tanks1.png";
+          String imgPathArrows = _getImageFromStringColor(player["color"]);
           if (appData.imagesCache.containsKey(imgPathArrows)) {
             final ui.Image tilesetImage = appData.imagesCache[imgPathArrows]!;
             Offset tilePos =
@@ -90,9 +70,25 @@ class CanvasPainter extends CustomPainter {
         }
       }
 
+      if (gameState["projectiles"] != null) {
+        for (var projectile in gameState["projectiles"]) {
+          paint.color = Colors.red; // Color del proyectil
+
+          Offset pos = _serverToPainterCoords(
+            Offset(projectile["x"], projectile["y"]),
+            painterSize,
+          );
+
+          double radius =
+              _serverToPainterRadius(projectile["radius"], painterSize);
+
+          canvas.drawCircle(pos, radius, paint);
+        }
+      }
+
       // Escriure el text informatiu i l'identificador d'usuari
       String playerId = appData.playerData["id"];
-      Color playerColor = Colors.black;
+      Color playerColor = _getColorFromString(appData.playerData["color"]);
       final paragraphStyle = ui.ParagraphStyle(
         textDirection: TextDirection.ltr,
       );
@@ -160,6 +156,37 @@ class CanvasPainter extends CustomPainter {
       //   return directions[direction];
       default:
         return directions[lastDirection];
+    }
+  }
+
+  // Escollir una imatge en funció del seu color
+  static String _getImageFromStringColor(String color) {
+    switch (color.toLowerCase()) {
+      case "green":
+        return "images/tanks4.png";
+      case "blue":
+        return "images/tanks2.png";
+      case "brown":
+        return "images/tanks1.png";
+      case "yellow":
+        return "images/tanks3.png";
+      default:
+        return "images/tanks1.png";
+    }
+  }
+
+  static Color _getColorFromString(String color) {
+    switch (color.toLowerCase()) {
+      case "brown":
+        return Colors.brown;
+      case "green":
+        return Colors.green;
+      case "blue":
+        return Colors.blue;
+      case "yellow":
+        return Colors.yellow;
+      default:
+        return Colors.brown;
     }
   }
 }

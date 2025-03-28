@@ -12,13 +12,13 @@ const INITIAL_RADIUS = 0.05;
 // Direcciones posibles para el movimiento de los jugadores
 const DIRECTIONS = {
     "up":         { dx: 0, dy: -1 },
-    "upLeft":     { dx: -1, dy: -1 },
+    // "upLeft":     { dx: -1, dy: -1 },
     "left":       { dx: -1, dy: 0 },
-    "downLeft":   { dx: -1, dy: 1 },
+    // "downLeft":   { dx: -1, dy: 1 },
     "down":       { dx: 0, dy: 1 },
-    "downRight":  { dx: 1, dy: 1 },
+    // "downRight":  { dx: 1, dy: 1 },
     "right":      { dx: 1, dy: 0 },
-    "upRight":    { dx: 1, dy: -1 },
+    // "upRight":    { dx: 1, dy: -1 },
     "none":       { dx: 0, dy: 0 }
 };
 

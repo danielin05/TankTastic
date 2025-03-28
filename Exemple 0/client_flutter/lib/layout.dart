@@ -24,34 +24,39 @@ class _LayoutState extends State<Layout> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final appData = Provider.of<AppData>(context, listen: false);
       await appData.getImage("images/tanks1.png");
+      await appData.getImage("images/tanks2.png");
+      await appData.getImage("images/tanks3.png");
+      await appData.getImage("images/tanks4.png");
     });
   }
 
   // Tractar què passa quan el jugador apreta una tecla
+  // Tratar qué pasa cuando el jugador aprieta una tecla
   void _onKeyEvent(KeyEvent event, AppData appData) {
     String key = event.logicalKey.keyLabel.toLowerCase();
 
     if (key == " ") {
-      key == key;
+      key = "space";
     } else if (key.contains(" ")) {
       key = key.split(" ")[1];
-      print(key);
     } else {
       return;
     }
 
     if (event is KeyDownEvent) {
       _pressedKeys.add(key);
-      (key);
     } else if (event is KeyUpEvent) {
       _pressedKeys.remove(key);
     }
 
-    // Enviar la direcció escollida pel jugador al servidor
+    // Enviar solo el movimiento al servidor
     var direction = _getDirectionFromKeys();
-    var shoot = _getShootBoolean();
     appData.sendMessage(jsonEncode({"type": "direction", "value": direction}));
-    appData.sendMessage(jsonEncode({"type": "shoot", "value": shoot}));
+
+    // Solo disparar si se presiona espacio (y no repetir mientras esté presionada)
+    if (event is KeyDownEvent && key == "space") {
+      appData.sendMessage(jsonEncode({"type": "shoot", "value": true}));
+    }
   }
 
   String _getDirectionFromKeys() {

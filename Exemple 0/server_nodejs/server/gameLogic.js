@@ -1,6 +1,6 @@
 'use strict';
 
-const COLORS = ['green', 'blue', 'orange', 'red', 'purple'];
+const COLORS = ['brown', 'blue', 'yellow', 'green'];
 const OBJECT_WIDTH = 0.075;
 const OBJECT_HEIGHT = 0.025;
 const SPEED = 0.2;
@@ -22,6 +22,8 @@ class GameLogic {
     constructor() {
         this.objects = [];
         this.players = new Map();
+        this.zones = [];
+        this.projectiles = []; 
 
         // Rectangles que mou el servidor
         for (let i = 0; i < 10; i++) {
@@ -77,9 +79,24 @@ class GameLogic {
               case "shoot":
                 if (this.players.has(id)) {
                     let player = this.players.get(id);
-                    player.shoot = obj.value; // Asignamos el valor de obj.value (true/false) a shoot
-                    if (player.shoot) {
-                        console.log(`EL TANQUE: ${player.id} ha efectuado un disparo!`);
+                    let now = Date.now();
+
+                    if (!player.lastShotTime || (now - player.lastShotTime >= 2000)) {  // 2 segundos (2000 ms)
+                        const dir = DIRECTIONS[player.lastDirection];
+                        if (dir.dx !== 0 || dir.dy !== 0) {
+                            this.projectiles.push({
+                                x: player.x,
+                                y: player.y,
+                                dx: dir.dx,
+                                dy: dir.dy,
+                                speed: 0.5,
+                                radius: 0.01,
+                                ownerId: id
+                            });
+
+                            player.shoot = true;
+                            player.lastShotTime = now;  // Guardar el tiempo del disparo
+                        }
                     }
                 }
                 break;
@@ -92,35 +109,36 @@ class GameLogic {
     // Blucle de joc (funció que s'executa contínuament)
     updateGame(fps) {
         let deltaTime = 1 / fps;
-
-        // Actualitzar la posició dels objectes (rectangles negres)
-        this.objects.forEach(obj => {
-            obj.x += obj.speed * obj.direction * deltaTime;
-            if (obj.x <= 0 || obj.x + obj.width >= 1) {
-                obj.direction *= -1;
+        let proyectileDeltaTime = 3 / fps;
+    
+        // Mover los proyectiles
+        this.projectiles = this.projectiles.filter(projectile => {
+            projectile.x += projectile.dx * projectile.speed * proyectileDeltaTime;
+            projectile.y += projectile.dy * projectile.speed * proyectileDeltaTime;
+    
+            // Comprobar colisión con los jugadores
+            for (let player of this.players.values()) {
+                if (player.id !== projectile.ownerId && this.isCircleCircleColliding(
+                    projectile.x, projectile.y, projectile.radius,
+                    player.x, player.y, player.radius
+                )) {
+                    console.log(`Jugador ${player.id} ha sido alcanzado por un disparo!`);
+                    return false; // Eliminar el proyectil
+                }
             }
+    
+            // Eliminar el proyectil si sale de los límites del mapa
+            return projectile.x >= 0 && projectile.x <= 1 && projectile.y >= 0 && projectile.y <= 1;
         });
-
-        // Actualitzar la posició dels clients
+    
+        // Mover jugadores y detectar colisiones con objetos
         this.players.forEach(client => {
             let moveVector = DIRECTIONS[client.direction];
             client.x = Math.max(0, Math.min(1, client.x + client.speed * moveVector.dx * deltaTime));
             client.y = Math.max(0, Math.min(1, client.y + client.speed * moveVector.dy * deltaTime));
-
-            // Detectar colisions
-            this.objects = this.objects.filter(obj => {
-                if (this.isCircleRectColliding(client.x, client.y, client.radius, obj.x, obj.y, obj.width, obj.height)) {
-                    client.radius *= 1.1;
-                    client.speed *= 1.05;
-                    return false;
-                }
-                return true;
-            });
-            if (client.shoot){
-                console.log("DISPARA!!!!!!!")
-            }
         });
     }
+    
 
     // Obtenir una posició on no hi h ha ni objectes ni jugadors
     getValidPosition() {
@@ -175,7 +193,8 @@ class GameLogic {
     getGameState() {
         return {
             objects: this.objects,
-            players: Array.from(this.players.values())
+            players: Array.from(this.players.values()),
+            projectiles: this.projectiles // Enviar proyectiles a los clientes
         };
     }
 }
