@@ -50,7 +50,7 @@ class AppData extends ChangeNotifier {
       if (layer["visible"] != true) continue;
 
       final String imageFile = layer["tilesSheetFile"];
-      final image = await getImage("tiles/\${imageFile}");
+      final image = await getImage("tiles/$imageFile");
 
       final tileMap = (layer["tileMap"] as List)
           .map<List<int>>((row) => List<int>.from(row))
@@ -65,6 +65,13 @@ class AppData extends ChangeNotifier {
         ),
       );
     }
+
+    // Preload tank and projectile images
+    await getImage("images/tanks1.png");
+    await getImage("images/tanks2.png");
+    await getImage("images/tanks3.png");
+    await getImage("images/tanks4.png");
+    await getImage("sprites/projectile.png");
 
     notifyListeners();
   }
@@ -163,7 +170,7 @@ class AppData extends ChangeNotifier {
 
   Future<ui.Image> getImage(String assetName) async {
     if (!imagesCache.containsKey(assetName)) {
-      final ByteData data = await rootBundle.load('assets/\$assetName');
+      final ByteData data = await rootBundle.load('assets/$assetName');
       final Uint8List bytes = data.buffer.asUint8List();
       imagesCache[assetName] = await decodeImage(bytes);
     }
@@ -194,11 +201,12 @@ class MapLayer {
 class Zone {
   final double x, y, width, height;
 
-  Zone(
-      {required this.x,
-      required this.y,
-      required this.width,
-      required this.height});
+  Zone({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+  });
 
   bool contains(double px, double py) {
     return px >= x && px <= x + width && py >= y && py <= y + height;
