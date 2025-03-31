@@ -27,6 +27,7 @@ class _LayoutState extends State<Layout> {
       await appData.getImage("images/tanks2.png");
       await appData.getImage("images/tanks3.png");
       await appData.getImage("images/tanks4.png");
+      await appData.getImage("images/projectiles.png");
     });
   }
 

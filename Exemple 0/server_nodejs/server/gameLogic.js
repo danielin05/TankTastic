@@ -4,7 +4,7 @@ const COLORS = ['brown', 'blue', 'yellow', 'green'];
 const OBJECT_WIDTH = 0.075;
 const OBJECT_HEIGHT = 0.025;
 const SPEED = 0.2;
-const INITIAL_RADIUS = 0.05;
+const INITIAL_RADIUS = 0.035;
 
 const DIRECTIONS = {
     "up":         { dx: 0, dy: -1 },
@@ -81,7 +81,7 @@ class GameLogic {
                     let player = this.players.get(id);
                     let now = Date.now();
 
-                    if (!player.lastShotTime || (now - player.lastShotTime >= 2000)) {  // 2 segundos (2000 ms)
+                    if (!player.lastShotTime || (now - player.lastShotTime >= 1000)) {  // 2 segundos (2000 ms)
                         const dir = DIRECTIONS[player.lastDirection];
                         if (dir.dx !== 0 || dir.dy !== 0) {
                             this.projectiles.push({
