@@ -217,10 +217,11 @@ class GameLogic {
 
     getGameState() {
         return {
-            players: Array.from(this.players.values()),
+            players: Array.from(this.players.values()).filter(p => p.alive),
             projectiles: this.projectiles
         };
     }
+    
 }
 
 module.exports = GameLogic;
