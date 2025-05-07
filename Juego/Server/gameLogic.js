@@ -137,6 +137,20 @@ class GameLogic {
                     player.x, player.y, player.radius
                 )) {
                     console.log(`Jugador ${player.id} ha sido alcanzado por un disparo!`);
+    
+                    // Marcar como muerto
+                    player.alive = false;
+                
+                    // Obtener el ganador
+                    const winner = this.players.get(projectile.ownerId);
+                    
+                    // Enviar mensajes de fin de partida
+                    if (player.ws && player.ws.send) {
+                        player.ws.send(JSON.stringify({ type: "game over", result: "Has Perdido" }));
+                    }
+                    if (winner && winner.ws && winner.ws.send) {
+                        winner.ws.send(JSON.stringify({ type: "game over", result: "Has Ganado" }));
+                    }
                     return false;
                 }
             }

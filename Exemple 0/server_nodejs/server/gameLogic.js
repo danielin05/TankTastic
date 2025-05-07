@@ -140,7 +140,7 @@ class GameLogic {
     }
     
 
-    // Obtenir una posició on no hi h ha ni objectes ni jugadors
+    // Obtenir una posició on no hi ha ni objectes ni jugadors
     getValidPosition() {
         let x, y;
         let isValid = false;

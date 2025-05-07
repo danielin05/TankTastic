@@ -11,7 +11,12 @@ class CanvasPainter extends CustomPainter {
     "right": Offset(256, 0),
     "down": Offset(384, 0),
   };
-
+  Map projectiles = {
+    "left": Offset(35, 15),
+    "up": Offset(0, 17.5),
+    "right": Offset(35, 0),
+    "down": Offset(0, 35),
+  };
   CanvasPainter(this.appData);
 
   @override
@@ -74,18 +79,44 @@ class CanvasPainter extends CustomPainter {
 
           double radius =
               _serverToPainterRadius(projectile["radius"], painterSize);
-          final String imgPath = "sprites/projectile.png";
 
-          if (appData.imagesCache.containsKey(imgPath)) {
-            final ui.Image image = appData.imagesCache[imgPath]!;
-            final double size = radius * 2;
+          if (radius < 5) radius = 5; // Valor mínimo para asegurar visibilidad
+
+          // Ruta de la imagen del proyectil
+          String imgPathProjectile = "images/projectile5.png";
+
+          if (appData.imagesCache.containsKey(imgPathProjectile)) {
+            print("LA IMAGEN SI CARGA");
+            final ui.Image projectileImage =
+                appData.imagesCache[imgPathProjectile]!;
+
+            Size tileSize =
+                Size(15, 35); // Tamaño original del proyectil en el spritesheet
+            double painterScale = (2 * radius) / tileSize.width;
+
+            Size painterSize = Size(15, 35); // Tamaño fijo
+
+            double x = pos.dx - (painterSize.width / 2);
+            double y = pos.dy - (painterSize.height / 2);
+            if (radius <= 0) {
+              print(
+                  "ERROR: El radio del proyectil es demasiado pequeño ($radius)");
+            }
+
             canvas.drawImageRect(
-              image,
-              Rect.fromLTWH(
-                  0, 0, image.width.toDouble(), image.height.toDouble()),
-              Rect.fromLTWH(pos.dx - radius, pos.dy - radius, size, size),
+              projectileImage,
+              Rect.fromLTWH(0, 0, tileSize.width,
+                  tileSize.height), // Usamos toda la imagen
+              Rect.fromLTWH(x, y, painterSize.width, painterSize.height),
               Paint(),
             );
+            print(
+                "Dibujando proyectil en: x=${pos.dx}, y=${pos.dy}, radio=$radius");
+          } else {
+            // Si la imagen no está en caché, dibujar un círculo como fallback
+            print("LA IMAGEN NO CARGA");
+            paint.color = Colors.red;
+            canvas.drawCircle(pos, radius, paint);
           }
         }
       }
@@ -97,6 +128,7 @@ class CanvasPainter extends CustomPainter {
             Offset(player["x"], player["y"]),
             painterSize,
           );
+          print(player["alive"]);
           double radius = _serverToPainterRadius(player["radius"], painterSize);
 
           String imgPath = _getImageFromStringColor(player["color"]);
@@ -170,6 +202,30 @@ class CanvasPainter extends CustomPainter {
       "down": Offset(384, 0),
     };
     return directions[direction] ?? directions[lastDirection] ?? Offset.zero;
+  }
+
+  // Agafar la part del dibuix que té la fletxa de direcció a dibuixar
+  Offset _getProjectileTile(String direction, String lastDirection) {
+    switch (direction) {
+      case "left":
+        return projectiles[direction];
+      // case "upLeft":
+      //   return directions[direction];
+      case "up":
+        return projectiles[direction];
+      // case "upRight":
+      //   return directions[direction];
+      case "right":
+        return projectiles[direction];
+      // case "downRight":
+      //   return directions[direction];
+      case "down":
+        return projectiles[direction];
+      // case "downLeft":
+      //   return directions[direction];
+      default:
+        return projectiles[lastDirection];
+    }
   }
 
   static String _getImageFromStringColor(String color) {
